@@ -120,8 +120,11 @@ PS>Invoke-PSImage -Script .\Invoke-Mimikatz.ps1 -Out .\evil-kiwi.png -Image .\ki
         $randstr = [System.Web.Security.Membership]::GeneratePassword(128,0)
         $randb = [system.Text.Encoding]::ASCII.GetBytes($randstr)
         
+        # channel Number: RGBA = 4, RGB = 3
+        $channelNum = [Math]::Abs($bmpData.Stride) / $img.Width;
+
         # loop through the RGB array and copy the payload into it
-        for ($counter = 0; $counter -lt ($rgbValues.Length)/3; $counter++) {
+        for ($counter = 0; $counter -lt ($rgbValues.Length)/$channelNum; $counter++) {
             if ($counter -lt $payload.Length){
                 $paybyte1 = [math]::Floor($payload[$counter]/16)
                 $paybyte2 = ($payload[$counter] -band 0x0f)
@@ -131,9 +134,9 @@ PS>Invoke-PSImage -Script .\Invoke-Mimikatz.ps1 -Out .\evil-kiwi.png -Image .\ki
                 $paybyte2 = ($randb[($counter+1)%67] -band 0x0f)
                 $paybyte3 = ($randb[($counter+2)%109] -band 0x0f)
             }
-            $rgbValues[($counter*3)] = ($rgbValues[($counter*3)] -band 0xf0) -bor $paybyte1
-            $rgbValues[($counter*3+1)] = ($rgbValues[($counter*3+1)] -band 0xf0) -bor $paybyte2
-            $rgbValues[($counter*3+2)] = ($rgbValues[($counter*3+2)] -band 0xf0) -bor $paybyte3
+            $rgbValues[($counter*$channelNum)]   = ($rgbValues[($counter*$channelNum)]   -band 0xf0) -bor $paybyte1
+            $rgbValues[($counter*$channelNum+1)] = ($rgbValues[($counter*$channelNum+1)] -band 0xf0) -bor $paybyte2
+            $rgbValues[($counter*$channelNum+2)] = ($rgbValues[($counter*$channelNum+2)] -band 0xf0) -bor $paybyte3
         }
 
         # Copy the array of RGB values back to the bitmap
